@@ -111,6 +111,10 @@ function(add_pandoc_man SRC)
     message(FATAL_ERROR "File name of a man page must be in the format {name}.{man-number}${MD_EXT}.")
   endif()
 
+  # Ensure destination directory exists
+  get_filename_component(DEST_DIR ${DST} DIRECTORY)
+  file(MAKE_DIRECTORY "${DEST_DIR}")
+
   add_custom_command(
     OUTPUT ${DST}
     COMMAND ${PANDOCCOMMAND_PATH} -s -t man ${SRC} -o ${DST}
