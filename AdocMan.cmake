@@ -30,7 +30,7 @@
 #
 # Parameters
 # ^^^^^^^^^^
-# Required parameter is source with markdown file. Must have adoc extension with man category prepended, i.e. something like ${CMAKE_SOURCE_DIR}/src/utility.1.adoc
+# Required parameter is source with AsciiDoc file. Must have adoc extension with man category prepended, i.e. something like ${CMAKE_SOURCE_DIR}/src/utility.1.adoc
 # DST - optional parameter, which overrides where generated man will be stored.
 # If not specified then will be automatically set to ${CMAKE_BINARY_DIR}/src/utility.1
 #
@@ -110,6 +110,10 @@ function(add_adoc_man SRC)
   if(NOT(MAN_FILE_NAME MATCHES "^${FILE_NAME_WE}.${MAN_NUM}$"))
     message(FATAL_ERROR "File name of a man page must be in the format {name}.{man-number}${ADOC_EXT}.")
   endif()
+
+  # Ensure destination directory exists
+  get_filename_component(DEST_DIR ${DST} DIRECTORY)
+  file(MAKE_DIRECTORY "${DEST_DIR}")
 
   add_custom_command(
     OUTPUT ${DST}
