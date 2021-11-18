@@ -58,3 +58,16 @@ jobs:
           man ./testadoc.1
           man testadoc
           popd
+      - name: Check PandocMan.cmake
+        run: |
+          set -eux
+          sudo dnf -y -q install pandoc
+          mkdir "${GITHUB_WORKSPACE}/build-pandocman"
+          pushd "${GITHUB_WORKSPACE}/build-pandocman"
+          cmake "${GITHUB_WORKSPACE}/ci/pandocman" "-DCMAKE_MODULE_PATH=${GITHUB_WORKSPACE}"
+          cmake --build .
+          cmake --install .
+          [ -f testpandoc.1 ]
+          man ./testpandoc.1
+          man testpandoc
+          popd
