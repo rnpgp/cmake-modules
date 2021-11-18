@@ -1,0 +1,13 @@
+= test-adoc(1)
+Test-adoc
+:doctype: manpage
+:release-version: 0.0.1
+:man manual: Test-adoc Manual
+:man source: Test-adoc {release-version}
+
+== NAME
+
+Test-adoc - dummy man file for AdocMan.cmake
+
+== SYNOPSIS
+
