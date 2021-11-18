@@ -53,24 +53,50 @@ if (NOT OPENSSL_FOUND)
   message(FATAL_ERROR "OpenSSL is not found. Please make sure that you call find_package(OpenSSL) first.")
 endif()
 
-get_filename_component(libdir ${OPENSSL_CRYPTO_LIBRARY} DIRECTORY)
+# Copy and build findopensslfeatures.c in fossl-build subfolder.
+set(_fossl_work_dir "${CMAKE_BINARY_DIR}/fossl-build")
+file(MAKE_DIRECTORY "${_fossl_work_dir}")
+file(COPY "${CMAKE_CURRENT_LIST_DIR}/findopensslfeatures.c"
+  DESTINATION "${_fossl_work_dir}"
+)
+# As it's short enough let's keep it here.
+file(WRITE "${_fossl_work_dir}/CMakeLists.txt"
+"cmake_minimum_required(VERSION 3.14)\n\
+project(findopensslfeatures LANGUAGES C)\n\
+set(CMAKE_C_STANDARD 99)\n\
+include(FindOpenSSL)\n\
+find_package(OpenSSL REQUIRED)\n\
+add_executable(findopensslfeatures findopensslfeatures.c)\n\
+target_link_libraries(findopensslfeatures PRIVATE OpenSSL::Crypto)\n"
+)
+
 execute_process(
-  COMMAND "${CMAKE_C_COMPILER}" "-I${OPENSSL_INCLUDE_DIR}" "-L${libdir}" "-lcrypto" "${CMAKE_CURRENT_LIST_DIR}/findopensslfeatures.c" "-o" "opensslfeatures"
-  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+  COMMAND "cmake" "." "-DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}"
+  WORKING_DIRECTORY "${_fossl_work_dir}"
   OUTPUT_VARIABLE output
   ERROR_VARIABLE error
   RESULT_VARIABLE result
 )
-
 if (NOT ${result} EQUAL 0)
-  message(FATAL_ERROR "Error compiling findopensslfeatures.c: \n${error}")
+  message(FATAL_ERROR "Error configuring findopensslfeatures: ${result}\n${error}")
+endif()
+
+execute_process(
+  COMMAND "cmake" "--build" "."
+  WORKING_DIRECTORY "${_fossl_work_dir}"
+  OUTPUT_VARIABLE output
+  ERROR_VARIABLE error
+  RESULT_VARIABLE result
+)
+if (NOT ${result} EQUAL 0)
+  message(FATAL_ERROR "Error building findopensslfeatures: ${result}\n${error}")
 endif()
 
 set(OPENSSL_SUPPORTED_FEATURES "")
 foreach(feature "hashes" "ciphers" "curves" "publickey")
   execute_process(
-    COMMAND "./opensslfeatures" "${feature}"
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    COMMAND "./findopensslfeatures" "${feature}"
+    WORKING_DIRECTORY "${_fossl_work_dir}"
     OUTPUT_VARIABLE feature_val
     ERROR_VARIABLE error
     RESULT_VARIABLE result
