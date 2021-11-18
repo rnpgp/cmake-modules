@@ -1,0 +1,46 @@
+name: centos8
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '**.md'
+      - '! ci/**.md'
+  pull_request:  
+    paths-ignore:
+      - '**.md'
+      - '! ci/**.md'
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    container:
+      image: centos:8
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+    name: CMake modules check
+    steps:
+      - run: |
+          dnf -y install git
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - name: Install needed packages
+        run: |
+          set -eux
+          dnf -y -q install sudo wget
+          sudo dnf -y -q install clang llvm gcc gcc-c++ make autoconf automake libtool gzip ncurses-devel byacc gettext-devel bison cmake
+          sudo dnf -y -q install epel-release && \
+          sudo dnf -y -q install 'dnf-command(config-manager)' && \
+          sudo dnf config-manager --set-enabled powertools
+          sudo dnf -y -q install openssl-devel
+      - name: Check FindOpenSSLFeatures.cmake
+        run: |
+          set -eux
+          mkdir "${GITHUB_WORKSPACE}/build-fossl"
+          pushd "${GITHUB_WORKSPACE}/build-fossl"
+          cmake "${GITHUB_WORKSPACE}/ci/findossl" "-DCMAKE_MODULE_PATH=${GITHUB_WORKSPACE}"
+          cmake --build .
+          popd
