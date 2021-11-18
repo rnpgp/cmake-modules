@@ -31,7 +31,7 @@ jobs:
         run: |
           set -eux
           dnf -y -q install sudo wget
-          sudo dnf -y -q install clang llvm gcc gcc-c++ make autoconf automake libtool gzip ncurses-devel byacc gettext-devel bison cmake
+          sudo dnf -y -q install clang llvm gcc gcc-c++ make autoconf automake libtool gzip ncurses-devel byacc gettext-devel bison cmake ruby-devel
           sudo dnf -y -q install epel-release && \
           sudo dnf -y -q install 'dnf-command(config-manager)' && \
           sudo dnf config-manager --set-enabled powertools
@@ -43,4 +43,18 @@ jobs:
           pushd "${GITHUB_WORKSPACE}/build-fossl"
           cmake "${GITHUB_WORKSPACE}/ci/findossl" "-DCMAKE_MODULE_PATH=${GITHUB_WORKSPACE}"
           cmake --build .
+          popd
+      - name: Check AdocMan.cmake
+        run: |
+          set -eux
+          sudo gem install asciidoctor
+          sudo dnf -y -q install man
+          mkdir "${GITHUB_WORKSPACE}/build-adocman"
+          pushd "${GITHUB_WORKSPACE}/build-adocman"
+          cmake "${GITHUB_WORKSPACE}/ci/adocman" "-DCMAKE_MODULE_PATH=${GITHUB_WORKSPACE}"
+          cmake --build .
+          cmake --install .
+          [ -f testadoc.1 ]
+          man ./testadoc.1
+          man testadoc
           popd
