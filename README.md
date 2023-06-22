@@ -22,3 +22,8 @@ FindOpenSSLFeatures.cmake
 
 This module can be used to list available OpenSSL features, without dependency on openssl binary. Instead of running openssl binary it compiles small utility (see `findopensslfeatures.c`) and runs it to retrieve all needed lists.
 Following features are supported: hashes, symmetric ciphers, elliptic curves and publickey engines.
+
+FindBotan.cmake
+---------------
+
+This module can be used to find Botan 2 and Botan 3 installation, with possibility to specify the minimum version and preffered location. 
