@@ -27,8 +27,10 @@ jobs:
             ci: findossl
           - name: PandocMan.cmake
             ci: pandocman
+          - name: FindBotan.cmake
+            ci: findbotan
       fail-fast: false
-    name: CMake modules check
+    name: Check CMake module
     steps:
       - run: |
           dnf -y install git
@@ -80,3 +82,19 @@ jobs:
           man ./testpandoc.1
           man testpandoc
           popd
+      - name: Check FindBotan.cmake
+        if: matrix.module.name == 'FindBotan.cmake'
+        run: |
+          set -eux
+          sudo dnf -y -q install python3-devel
+          git clone --depth 1 --branch 2.19.3 https://github.com/randombit/botan.git
+          pushd botan
+          python3 configure.py && make -j2 && make -j2 install
+          popd
+          mkdir "${GITHUB_WORKSPACE}/build"
+          pushd "${GITHUB_WORKSPACE}/build"
+          cmake "${GITHUB_WORKSPACE}/ci/findbotan" "-DCMAKE_MODULE_PATH=${GITHUB_WORKSPACE}"
+          grep -q "/usr/local/lib/libbotan-2.so" "${GITHUB_WORKSPACE}/ci/findbotan/findbotan.txt"
+          grep -q "/usr/local/include/botan-2" "${GITHUB_WORKSPACE}/ci/findbotan/findbotan.txt"
+          popd
+
