@@ -6,7 +6,7 @@ on:
     paths-ignore:
       - '**.md'
       - '! ci/**.md'
-  pull_request:  
+  pull_request:
     paths-ignore:
       - '**.md'
       - '! ci/**.md'
@@ -19,14 +19,20 @@ jobs:
       image: tgagor/centos:stream8
     timeout-minutes: 10
     strategy:
+      matrix:
+        module:
+          - name: AdocMan.cmake
+            ci: adocman
+          - name: FindOpenSSLFeatures.cmake
+            ci: findossl
+          - name: PandocMan.cmake
+            ci: pandocman
       fail-fast: false
     name: CMake modules check
     steps:
       - run: |
           dnf -y install git
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 1
+      - uses: actions/checkout@v3
       - name: Install needed packages
         run: |
           set -eux
@@ -37,20 +43,22 @@ jobs:
           sudo dnf config-manager --set-enabled powertools
           sudo dnf -y -q install openssl-devel
       - name: Check FindOpenSSLFeatures.cmake
+        if: matrix.module.name == 'FindOpenSSLFeatures.cmake'
         run: |
           set -eux
-          mkdir "${GITHUB_WORKSPACE}/build-fossl"
-          pushd "${GITHUB_WORKSPACE}/build-fossl"
+          mkdir "${GITHUB_WORKSPACE}/build"
+          pushd "${GITHUB_WORKSPACE}/build"
           cmake "${GITHUB_WORKSPACE}/ci/findossl" "-DCMAKE_MODULE_PATH=${GITHUB_WORKSPACE}"
           cmake --build .
           popd
       - name: Check AdocMan.cmake
+        if: matrix.module.name == 'AdocMan.cmake'
         run: |
           set -eux
           sudo gem install asciidoctor
           sudo dnf -y -q install man
-          mkdir "${GITHUB_WORKSPACE}/build-adocman"
-          pushd "${GITHUB_WORKSPACE}/build-adocman"
+          mkdir "${GITHUB_WORKSPACE}/build"
+          pushd "${GITHUB_WORKSPACE}/build"
           cmake "${GITHUB_WORKSPACE}/ci/adocman" "-DCMAKE_MODULE_PATH=${GITHUB_WORKSPACE}"
           cmake --build .
           cmake --install .
@@ -59,11 +67,12 @@ jobs:
           man testadoc
           popd
       - name: Check PandocMan.cmake
+        if: matrix.module.name == 'PandocMan.cmake'
         run: |
           set -eux
           sudo dnf -y -q install pandoc
-          mkdir "${GITHUB_WORKSPACE}/build-pandocman"
-          pushd "${GITHUB_WORKSPACE}/build-pandocman"
+          mkdir "${GITHUB_WORKSPACE}/build"
+          pushd "${GITHUB_WORKSPACE}/build"
           cmake "${GITHUB_WORKSPACE}/ci/pandocman" "-DCMAKE_MODULE_PATH=${GITHUB_WORKSPACE}"
           cmake --build .
           cmake --install .
